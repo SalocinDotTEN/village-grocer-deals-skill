@@ -7,6 +7,11 @@ Subcommands:
 
 Standard library only. Needs SCRAPECREATORS_API_KEY in the environment
 (not needed for --fixture runs).
+
+--save-images DIR downloads each post's images into DIR and lists the local
+paths per post as "image_files", so the assistant can look at them with its own
+vision. No OCR or other image service is used. Village Grocer often reuses last
+week's caption, so the dates on the image are the ones to trust.
 """
 from __future__ import annotations
 
@@ -56,7 +61,7 @@ def api_page(page_url: str, cursor: str | None, api_key: str) -> dict:
         params["cursor"] = cursor
     req = urllib.request.Request(
         f"{API_URL}?{urllib.parse.urlencode(params)}",
-        headers={"x-api-key": api_key, "User-Agent": "village-grocer-deals-skill/1.0"},
+        headers={"x-api-key": api_key, "User-Agent": "village-grocer-deals-skill/1.1"},
     )
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
@@ -88,6 +93,31 @@ def post_images(p: dict) -> list[str]:
         thumb = (p.get("videoDetails") or {}).get("thumbnailUrl")
         imgs = [thumb] if thumb else []
     return [str(u) for u in imgs][:3]
+
+
+def save_images(posts: list[dict], folder: Path) -> int:
+    """Download each post's images into folder; fill post["image_files"]. Returns failures."""
+    folder.mkdir(parents=True, exist_ok=True)
+    failed = 0
+    for post in posts:
+        files, errors = [], []
+        for i, url in enumerate(post["images"]):
+            dest = folder / f"{post['id']}_{i}.jpg"
+            try:
+                if url.startswith(("http://", "https://")):
+                    req = urllib.request.Request(url, headers={"User-Agent": "village-grocer-deals-skill/1.1"})
+                    with urllib.request.urlopen(req, timeout=60) as resp:
+                        dest.write_bytes(resp.read())
+                else:  # local path, used by tests
+                    dest.write_bytes(Path(url).read_bytes())
+                files.append(str(dest))
+            except Exception as e:  # one broken image should not sink the run
+                failed += 1
+                errors.append(f"{url[:80]}: {e}")
+        post["image_files"] = files
+        if errors:
+            post["image_errors"] = errors
+    return failed
 
 
 def cmd_fetch(args: argparse.Namespace) -> int:
@@ -142,12 +172,15 @@ def cmd_fetch(args: argparse.Namespace) -> int:
         for p in collected
         if str(p.get("id")) not in seen
     ]
-    print(json.dumps({
+    out = {
         "page_url": args.page_url,
         "pages_read": pages,
         "posts_in_window": len(collected),
         "new_posts": new,
-    }, ensure_ascii=False, indent=2))
+    }
+    if args.save_images:
+        out["image_download_failures"] = save_images(new, Path(args.save_images).expanduser())
+    print(json.dumps(out, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -172,6 +205,8 @@ def main(argv: list[str] | None = None) -> int:
     f.add_argument("--max-pages", type=int, default=5)
     f.add_argument("--state", default=str(DEFAULT_STATE))
     f.add_argument("--all", action="store_true", help="ignore the reported-posts list")
+    f.add_argument("--save-images", metavar="DIR",
+                   help="download post images into DIR so they can be viewed locally")
     f.add_argument("--fixture", help=argparse.SUPPRESS)  # JSON list of API pages, for tests
     f.set_defaults(func=cmd_fetch)
 

@@ -10,6 +10,8 @@ It follows the open [Agent Skills](https://agentskills.io) format (`SKILL.md`), 
 
 **Skipped:** store opening promos, product showcases with no deal, delivery codes, spend-based vouchers, minimum-spend codes, loyalty points promos, contests and non-food items.
 
+**Dates come from the images.** Village Grocer often reuses last week's caption, so the assistant looks at each post's images with its own vision and trusts the dates printed there over the caption. No OCR or other image service is involved.
+
 The full rules are in [`village-grocer-deals/references/deal-rules.md`](village-grocer-deals/references/deal-rules.md). Edit that file to change what counts as a deal.
 
 ## Requirements

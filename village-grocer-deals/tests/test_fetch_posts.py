@@ -75,5 +75,28 @@ class FetchTests(unittest.TestCase):
         self.assertIn("no posts", err)
 
 
+    def test_save_images_downloads_local_copies(self):
+        img = self.tmp / "src.jpg"
+        img.write_bytes(b"\xff\xd8fake-jpeg")
+        pages = [{"posts": [
+            {"id": "9", "url": "https://fb/p9", "creation_time": iso(0.1),
+             "text": "Bumper Sale! Offers valid from 13 - 16 November",  # stale caption
+             "images": [str(img), str(self.tmp / "missing.jpg")]},
+        ], "cursor": None}]
+        self.fixture.write_text(json.dumps(pages))
+        out_dir = self.tmp / "imgs"
+        r = self.fetch("--save-images", str(out_dir))
+        post = r["new_posts"][0]
+        self.assertEqual(post["image_files"], [str(out_dir / "9_0.jpg")])
+        self.assertEqual((out_dir / "9_0.jpg").read_bytes(), b"\xff\xd8fake-jpeg")
+        self.assertEqual(r["image_download_failures"], 1)
+        self.assertEqual(len(post["image_errors"]), 1)
+
+    def test_no_image_fields_without_flag(self):
+        r = self.fetch()
+        self.assertNotIn("image_files", r["new_posts"][0])
+        self.assertNotIn("image_download_failures", r)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -21,6 +21,10 @@ Item types in scope:
 - Jam, spreads and condiments
 - Drinks: water, juice, soft drinks, coffee and tea
 
+## Dates
+
+Use the validity dates printed on the post's images. The caption is often copied from the previous week, so it can show old dates. If the image and caption disagree, the image is right.
+
 ## Skip a post when
 
 - It promotes a new store, outlet or grand opening, even if it lists item deals or calls itself a "Bumper Bonanza" for the opening.
@@ -39,6 +43,8 @@ Item types in scope:
 | "Emborg butter RM14.49, Basmathi rice 2kg RM19.99, valid 13–16 Nov" | Keep |
 | "Bakery: 60% off your 2nd item, 16–30 Nov" | Keep |
 | "Frozen Dragon Tiger Grouper RM55.99/pc" | Keep |
+| Posted 20 Nov. Caption says "valid 13–16 Nov", image says "20–23 November 2026", Buy any 2 Chesdale cheese RM18.99 | Keep, valid 20–23 Nov (image wins) |
+| Bumper Sale listing cheese, dim sum and dishwash liquid | Keep, list the cheese and dim sum and leave out the dishwash |
 | "Spend RM25 on Puck or Darbo and get a free gift" | Skip (spend-based) |
 | "Pre-order Christmas set meals for pickup" | Skip (no deal) |
 | "Grand opening at our new outlet, Bumper Bonanza deals!" | Skip (store opening) |
